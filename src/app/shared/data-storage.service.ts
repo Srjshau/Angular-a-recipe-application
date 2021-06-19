@@ -29,13 +29,13 @@ export class DataStorageService {
                 return {
                     ...recipe,
                     ingredients: recipe.ingredients ? recipe.ingredients : []
+                }})
+            }),
+            tap(
+                (recipes: Recipe[]) => {
+                    this.recipeService.setRecipes(recipes);
                 }
-            })
-            // tap(
-            //     (recipes: Recipe[]) => {
-            //         this.recipeService.setRecipes(recipes);
-            //     }
-            // )
-        }));
+            )
+        );
     }
 }

@@ -17,11 +17,16 @@ export class RecipeDetailComponent implements OnInit {
     private route: ActivatedRoute) {}
 
   ngOnInit() {
+    this.getRecipe();
+    console.log('recipe', this.recipe)
+  } 
+
+  getRecipe() {
     this.route.params.subscribe((params: Params) => {
       this.id = +params['id'];
       this.recipe = this.recipeService.getRecipe(this.id);
     });
-  } 
+  }
 
   onAddToShoppingList() {
     this.recipeService.addIngredientsToShoppingList(this.recipe.ingredients);

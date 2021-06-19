@@ -13,13 +13,9 @@ export class RecipesResolverService implements Resolve<Recipe[]> {
 
     resolve(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): Recipe[] | Observable<Recipe[]> | Promise<Recipe[]> {
         const recipes = this.recipeService.getRecipes();
-
+        this.dataStorageService.fetchRecipes();
         if (recipes.length === 0) {
-            // this.dataStorageService.fetchRecipes().subscribe(
-            //     (response: Recipe[]) => {
-            //         this.recipeService.setRecipes(response);
-            //     }
-            // );
+            return this.dataStorageService.fetchRecipes();
         } else {
             return recipes;
         }  
