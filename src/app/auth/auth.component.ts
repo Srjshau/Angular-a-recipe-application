@@ -1,7 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, ComponentFactoryResolver, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { Observable } from 'rxjs';
+import { Observable, Subscription } from 'rxjs';
+import { AlertComponent } from '../shared/alert/alert.component';
+import { PlaceholderDirective } from '../shared/placeholder/placeholder.directive';
 import { AuthService } from './auth.service';
 import { AuthResponseData } from './model_and_codes';
 
@@ -10,13 +12,20 @@ import { AuthResponseData } from './model_and_codes';
   templateUrl: './auth.component.html',
   styleUrls: ['./auth.component.css']
 })
-export class AuthComponent implements OnInit {
+export class AuthComponent implements OnInit, OnDestroy {
   isLoggedIn = true;
   loading = false;
   errorMessage: string = null;
   authForm: FormGroup;
+  private closeSubscription: Subscription;
 
-  constructor(private authService: AuthService, private router: Router) { }
+  @ViewChild(PlaceholderDirective) alertHost: PlaceholderDirective;
+
+  constructor(
+    private authService: AuthService,
+    private router: Router,
+    private componentFactoryResolver: ComponentFactoryResolver
+  ) { }
 
   ngOnInit(): void {
     this.initializeForm();
@@ -28,7 +37,7 @@ export class AuthComponent implements OnInit {
 
   initializeForm(): void {
     this.authForm = new FormGroup({
-      email: new FormControl(null, [ Validators.required, Validators.email ]),
+      email: new FormControl(null, [Validators.required, Validators.email]),
       password: new FormControl(null, [Validators.required, Validators.minLength(6)])
     });
   }
@@ -58,11 +67,37 @@ export class AuthComponent implements OnInit {
       },
       (errorMessage) => {
         console.log(errorMessage);
-        this.errorMessage = errorMessage;
+        this.showErrorAlert(errorMessage);
+        // this.errorMessage = errorMessage;
         this.loading = false;
       }
     );
 
+  }
+
+  handleClose(): void {
+    this.errorMessage = null;
+  }
+
+  // Dynamic Component - Imperative Approach
+  private showErrorAlert(errMsg: string): void {
+    const alertComponentFactory = this.componentFactoryResolver.resolveComponentFactory(AlertComponent);
+    const hostViewContainerRef = this.alertHost.viewContainerRef;
+    hostViewContainerRef.clear();
+
+    const componentRef = hostViewContainerRef.createComponent(alertComponentFactory);
+
+    componentRef.instance.message = errMsg;
+    this.closeSubscription = componentRef.instance.closeEvent.subscribe(() => {
+      this.closeSubscription.unsubscribe();
+      hostViewContainerRef.clear();
+    });
+  }
+
+  ngOnDestroy(): void {
+    if (this.closeSubscription) {
+      this.closeSubscription.unsubscribe();
+    }
   }
 
 }
